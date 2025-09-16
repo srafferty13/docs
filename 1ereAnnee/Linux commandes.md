@@ -1,0 +1,26 @@
+## Linux commandes
+- `cd` : change directory
+- `cd ~` : aller dans le répertoire de travail
+- `cd ..` : reculer d'un répertoire
+- `cd /home/rep_c` ou `cd rep_c`
+- `ls -l` : lister les fichiers avec leurs droits
+- `id eve` : infos sur l'utilisateur eve
+- `pwd` : afficher le dossier courant
+- `chown user:groupe chemin` : changer propriétaire/groupe
+- `chmod XXX chemin` : changer les droits (R=4, W=2, X=1)
+- `chmod u+x chemin` : ajouter droit d'exécution
+- `mkdir /home/partage` : créer un répertoire
+- `touch /home/partage/fichier` : créer un fichier
+- `rm /home/partage` : supprimer (ajouter `-r` pour répertoire)
+- `mv cible dest` : déplacer
+- `cp cible dest` : copier
+- `su eve` : changer d'utilisateur
+- `su -eve` : changer d'utilisateur et aller dans son home
+- `exit` : quitter une session
+- `ssh user@ip` : connexion SSH
+- `apt-get update` : mettre à jour la liste des paquets
+- `apt-get upgrade` : mettre à jour les paquets
+- `apt-install apache2` : installer Apache
+- `adduser admin` : ajouter un utilisateur
+
+---
