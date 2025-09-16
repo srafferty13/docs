@@ -1,4 +1,4 @@
-## GPT Snort Honeypot Cowrie
+## Cours Snort Honeypot Cowrie
 
 ### Snort
 - IDS/IPS installé sur pfSense pour détecter et bloquer des menaces en temps réel.
