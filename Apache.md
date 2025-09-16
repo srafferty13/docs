@@ -14,3 +14,4 @@ apt install apache2 -y
 ```bash
 systemctl status apache2
 ```
+- Ouvrir le navigateur et aller sur : [http://localhost](http://localhost)
