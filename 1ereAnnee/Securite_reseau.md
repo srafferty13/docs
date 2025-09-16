@@ -1,4 +1,4 @@
-## Semestre 2 Cours 1 (Sécurité réseau)
+## Sécurité réseau
 
 ### DHCP Snooping
 ```cisco
