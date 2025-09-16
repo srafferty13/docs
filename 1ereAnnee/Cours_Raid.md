@@ -1,4 +1,4 @@
-## Raid
+## Cours Raid
 ### Types de RAID
 1. **RAID 0 (Stripping)** :
    - Données réparties entre plusieurs disques.
