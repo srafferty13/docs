@@ -2,6 +2,11 @@
 
 ## 1. Préparation
 - Changer IP, DNS et nom de la machine.
+- Installation de Bind9 et de ses outils
+```bash
+sudo apt update
+sudo apt install bind9 bind9-utils -y
+```
 - Cloner la machine.
 - Changer nom et IP sur la machine clonée.
 
