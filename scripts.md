@@ -173,3 +173,56 @@ Function effaceUO ($name) {
 - `try { ... } catch { ... }` – Handles errors for existing users.
 
 **Use case:** Automate bulk Active Directory account creation and group assignment.
+
+
+## TP5_scriptAD3.ps1 – Explications spécifiques
+
+### Variables et CSV
+
+```powershell
+$dossier="c:\donnees\"
+```
+
+- Définit la racine des lecteurs réseaux.
+- Nouveau par rapport aux scripts précédents : le script gère la **création de dossiers utilisateurs sur le serveur**.
+
+---
+
+### Création des comptes AD
+
+```powershell
+-New-ADUser ... `
+-HomeDrive "U:" `
+-HomeDirectory "\\172.16.0.1\donnees\$login"
+```
+
+- Ajout des paramètres **HomeDrive** et **HomeDirectory** :
+  - `HomeDrive "U:"` : assigne la lettre de lecteur réseau U: à l’utilisateur.
+  - `HomeDirectory "\\172.16.0.1\donnees\$login"` : pointe vers le dossier réseau personnel de l’utilisateur.
+- Cette configuration permet à chaque utilisateur d’avoir un **lecteur réseau automatiquement mappé** lors de sa connexion.
+
+---
+
+### Création et permissions des dossiers réseau
+
+```powershell
+if (!(Test-Path ($dossier+$login))) {
+    New-Item -Path $dossier -Name $login -ItemType "Directory"
+    Set-NTFSOwner -Path ($dossier+$login) -Account "sodecaf.local\$login"
+    Add-NTFSAccess -Path ($dossier+$login) -Account "sodecaf.local\$login" -AccessRights FullControl -AccessType Allow -PassThru
+}
+```
+
+**Nouveautés :**
+
+1. `Test-Path ($dossier+$login)`  
+   - Vérifie si le dossier personnel existe déjà, pour éviter de le recréer.
+
+2. `New-Item -ItemType "Directory"`  
+   - Crée le dossier utilisateur si nécessaire.
+
+3. `Set-NTFSOwner` et `Add-NTFSAccess` (module **NTFSSecurity**)  
+   - `Set-NTFSOwner` : définit l’utilisateur comme propriétaire du dossier.  
+   - `Add-NTFSAccess` : donne **FullControl** à l’utilisateur.  
+   - Ces commandes remplacent l’attribution manuelle de permissions et automatisent la configuration des droits NTFS.
+
