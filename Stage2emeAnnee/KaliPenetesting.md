@@ -1,140 +1,224 @@
-<img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" style="height:64px;margin-right:32px"/>
+# Guide Complet du Penetesting avec Kali Linux
 
-# d'accord. aide moi faire cette preparation . renseigne moi sur les différentes méthodes de pen-testing disponible sous Kali Linux pouvant etre utilisés dans le cadre des deux activites mentionnés plus tot soit 1. Pen tester les infra de l'entreprise 2. Pen tester les infra d'un client
+## Introduction
 
-Pour réussir ton point de cet après-midi, voici une **méthodologie claire** et structurée que tu pourras présenter, avec les outils Kali Linux correspondants.
+Ce guide présente une méthodologie structurée de penetesting basée sur le standard **PTES (Penetration Testing Execution Standard)**, la référence du secteur. La même approche s'applique à tous les contextes de test : infrastructure interne ou externe, petit réseau ou grande entreprise.
 
-Utilise le standard **PTES (Penetration Testing Execution Standard)** qui est la référence du métier. C’est une structure professionnelle idéale pour ton stage.[^1][^2]
+---
 
-***
+## Méthodologie PTES : Les 5 Phases
 
-### Méthodologie globale (Standard PTES simplifié)
+### Phase 1 : Reconnaissance & Collecte d'Informations (Information Gathering)
 
-Pour les deux activités (interne et client), la méthode suit toujours ces étapes. Ce qui change, c’est le périmètre (où tu es branché) et l’agressivité (ne rien casser chez le client).
+**Objectif :** Comprendre la cible sans l'affecter. C'est l'étape la plus importante (80% du travail de penetesting).
 
-#### Phase 1 : Reconnaissance \& Collecte d'infos (Information Gathering)
+**Approche :**
+- Collecte passive d'informations (OSINT) sur les domaines, IP publiques et services.
+- Écoute légère du réseau pour comprendre l'architecture.
 
-*C'est l'étape la plus importante (80% du travail).*
+**Outils Kali Linux :**
 
-- **Objectif :** Comprendre la cible sans forcément la toucher (OSINT) ou en scannant très légèrement.
-- **Outils Kali :**
-    - **`whois` / `nslookup` / `dig`** : Pour récupérer les infos de base sur les domaines et IP.[^3]
-    - **`theHarvester`** : Pour trouver des emails, sous-domaines et IP liés à l’entreprise (utile pour la partie client externe).[^3]
-    - **`Wireshark`** : (Pour le test interne Isitix) Branché sur le réseau, tu écoutes ce qui passe pour comprendre l'adressage IP et les protocoles utilisés (ARP, DHCP, DNS).[^3]
+| Outil | Utilisation | Commande exemple |
+|-------|-----------|------------------|
+| `whois` | Récupérer les informations d'enregistrement de domaine | `whois exemple.com` |
+| `nslookup` / `dig` | Énumérer les enregistrements DNS | `dig exemple.com` |
+| `theHarvester` | Trouver emails, sous-domaines et IP liés à une cible | `theHarvester -d exemple.com -b google` |
+| `Wireshark` | Écouter le trafic réseau (ARP, DHCP, DNS) | Interface graphique |
 
+---
 
-#### Phase 2 : Scan \& Énumération (Scanning)
+### Phase 2 : Scan & Énumération (Scanning)
 
-*C'est ici que tu cartographies précisément le réseau.*
+**Objectif :** Cartographier précisément le réseau. Identifier les machines actives, les ports ouverts et les versions des services.
 
-- **Objectif :** Trouver les machines actives, les ports ouverts et les versions des logiciels.
-- **Outils Kali :**
-    - **`Nmap`** (L’outil roi) :
-        - Commande type : `nmap -sV -sC -O <IP_Cible>`
-        - `-sV` donne la version des services (ex: Apache 2.4.49).
-        - `-sC` utilise des scripts par défaut pour trouver des infos faciles.
-    - **`netdiscover`** : Pour trouver les machines sur un réseau local interne (Isitix).[^1]
-    - **`Enum4linux`** : Spécifique pour les environnements Windows/Active Directory (très probable en entreprise interne).
+**Approche :**
+- Scan des adresses IP pour déterminer quels hôtes sont actifs.
+- Scan des ports pour connaître les services exposés.
+- Récupération des versions des logiciels (banner grabbing).
 
+**Outils Kali Linux :**
 
-#### Phase 3 : Analyse de Vulnérabilité (Vulnerability Assessment)
+| Outil | Utilisation | Commande exemple |
+|-------|-----------|------------------|
+| `Nmap` (L'outil principal) | Scanner complet : hôtes, ports, versions | `nmap -sV -sC -O 192.168.1.0/24` |
+| `Nmap` (scan version) | Déterminer les versions des services | `nmap -sV <IP>` |
+| `Nmap` (scan aggressive) | Scan plus approfondi avec reconnaissance d'OS | `nmap -A <IP>` |
+| `netdiscover` | Découvrir les machines sur un réseau local | `netdiscover -r 192.168.1.0/24` |
+| `Enum4linux` | Énumérer les infos Windows/Active Directory | `enum4linux <IP>` |
 
-*Trouver les failles connues sur les services détectés.*
+**Flags Nmap courants :**
+- `-p` : Spécifier les ports à scanner
+- `-sT` : Scan TCP complet
+- `-sU` : Scan UDP
+- `--script` : Utiliser les scripts NSE (Nmap Scripting Engine)
 
-- **Objectif :** Identifier si les versions trouvées ont des failles publiques (CVE).
-- **Outils Kali :**
-    - **`OpenVAS` (Greenbone)** : C’est le scanner de vulnérabilité open-source de référence sur Kali. Il génère des rapports complets.[^4][^3]
-    - **`Nmap Scripts`** : `nmap --script vuln <IP>` permet de faire un scan de vulnérabilité léger sans lancer OpenVAS.[^5]
-    - **`Searchsploit`** : Outil en ligne de commande pour chercher des exploits connus dans la base de données Exploit-DB (ex: `searchsploit apache 2.4`).
+---
 
+### Phase 3 : Analyse de Vulnérabilité (Vulnerability Assessment)
 
-#### Phase 4 : Exploitation (Gaining Access)
+**Objectif :** Identifier les failles de sécurité connues (CVE) dans les services détectés.
 
-*Prouver que la faille est réelle (Uniquement avec accord explicite !).*
+**Approche :**
+- Scanner automatisé pour détecter les vulnérabilités.
+- Recherche manuelle des exploits connus.
+- Validation des failles trouvées.
 
-- **Objectif :** Entrer dans le système via la faille trouvée.
-- **Outils Kali :**
-    - **`Metasploit Framework` (`msfconsole`)** : L’outil tout-en-un pour lancer des exploits.[^6]
-    - **`Hydra`** : Pour tester des mots de passe faibles (Brute-force) sur SSH, FTP, portails web.
-    - **`Responder`** : (Crucial pour le test interne) Il permet de capturer des identifiants Windows qui circulent sur le réseau local.[^3]
+**Outils Kali Linux :**
 
+| Outil | Utilisation | Commande exemple |
+|-------|-----------|------------------|
+| `OpenVAS` (Greenbone) | Scanner de vulnérabilité complet et paramétrable | Interface web (http://localhost:9392) |
+| `Nmap` (scripts de vulnérabilité) | Scan léger des vulnérabilités connues | `nmap --script vuln <IP>` |
+| `Searchsploit` | Chercher des exploits publics pour une faille donnée | `searchsploit apache 2.4` |
+| `Nikto` | Scanner spécialisé pour serveurs web | `nikto -h <URL>` |
 
-#### Phase 5 : Rapport (Reporting)
+**Processus :**
+1. Lancer un scan OpenVAS complet ou un scan Nmap vuln rapide.
+2. Identifier les CVE avec score CVSS élevé.
+3. Vérifier manuellement avec Searchsploit si un exploit existe.
 
-*Ton livrable final.*
+---
 
-- Expliquer la faille, son impact (Business), et comment la corriger (Remédiation).
+### Phase 4 : Exploitation (Gaining Access)
 
-***
+**Objectif :** Confirmer pratiquement que les failles sont réelles et exploitables.
 
-### Distinction pour tes 2 activités
+**Approche :**
+- Exploitation manuelle ou semi-automatisée des vulnérabilités.
+- Test des accès avec identifiants faibles.
+- Escalade de privilèges si possible.
 
-Voici comment adapter ton discours pour la réunion de 15h30 :
+**Outils Kali Linux :**
 
-#### 1. Pour l'infra interne (Isitix) - "Grey Box"
+| Outil | Utilisation | Commande exemple |
+|-------|-----------|------------------|
+| `Metasploit Framework` (`msfconsole`) | Plateforme d'exploitation tout-en-un | `msfconsole` |
+| `Hydra` | Attaque par force brute (SSH, FTP, Web, etc.) | `hydra -l admin -P wordlist.txt ssh://192.168.1.1` |
+| `Responder` | Capturer les identifiants Windows sur un réseau local | `responder -I eth0` |
+| `Burp Suite Community` | Tester les applications web (injection, XSS, etc.) | Interface graphique |
+| `SQLmap` | Détecter et exploiter les injections SQL | `sqlmap -u "http://exemple.com?id=1" --dbs` |
 
-Tu seras sûrement "à l'intérieur" du réseau.
+**Workflows courants :**
+- SSH/Services : Utiliser Hydra pour brute-force, puis Metasploit si une faille existe.
+- Réseaux internes : Responder capture les authentifications Windows circulant sur le réseau.
+- Web : Burp Suite pour mapper l'application et tester les injections.
 
-- **Approche :** Tu as déjà accès au réseau.
-- **Focus :** Écoute réseau (`Wireshark`), scan des serveurs internes (`Nmap`), et audit de l'Active Directory (droits utilisateurs trop permissifs).
-- **Outil clé à citer :** **OpenVAS** pour scanner tout le parc interne et **Responder** pour tester la robustesse des échanges Windows.
+---
 
+### Phase 5 : Rapport (Reporting)
 
-#### 2. Pour l'infra Client - "Black Box" ou "Grey Box"
+**Objectif :** Documenter les résultats de façon claire et exploitable.
 
-Cela dépendra du contrat, mais souvent c'est depuis l'extérieur (Web/IP publique).
+**Contenu minimum d'un rapport :**
+1. **Faille identifiée** : Description technique (CVE, service affecté, version).
+2. **Impact métier** : Quelles données ou services sont menacés ?
+3. **Preuve d'exploitation** : Captures d'écran, logs, evidence.
+4. **Remédiation** : Patch, mise à jour, configuration de sécurité recommandée.
+5. **Priorité** : Critique, Haute, Moyenne, Basse (selon CVSS et impact).
 
-- **Approche :** Tu simules un pirate sur internet.
-- **Focus :** Ne rien casser (Déni de service interdit !). Scan des IP publiques.
-- **Prudence :** Bien valider le **Périmètre (Scope)** exact avant de lancer quoi que ce soit.
-- **Outil clé à citer :** **Nmap** (scan prudent) et **Burp Suite** (si il y a des applications web à tester).[^3]
+---
 
+## Contextes d'Application
 
-### Antisèche pour ta réunion (Mots-clés)
+### Pentest Interne ("Grey Box")
 
-Si on te demande "Comment tu vas procéder ?", réponds :
-> *"Je compte suivre la méthodologie **PTES** : d'abord une phase de **Reconnaissance** passive, puis un **Mapping** du réseau avec Nmap. Ensuite, j'utiliserai des scanners comme **OpenVAS** pour identifier les CVE, et je validerai manuellement les failles critiques avec **Metasploit** uniquement si le périmètre l'autorise."*
-<span style="display:none">[^10][^11][^12][^13][^14][^15][^16][^17][^18][^19][^20][^7][^8][^9]</span>
+**Caractéristiques :**
+- Accès au réseau local depuis une machine.
+- Objectif : Identifier les failles accessibles depuis l'intérieur.
 
-<div align="center">⁂</div>
+**Approche spécifique :**
+- Mapping du réseau interne avec `netdiscover` et `Nmap`.
+- Écoute réseau avec `Wireshark` pour comprendre les flux.
+- Audit des serveurs internes avec `OpenVAS`.
+- Test de l'Active Directory avec `Enum4linux`.
+- Capture des identifiants avec `Responder`.
 
-[^1]: https://www.piirates.fr/pentest-vs-scan/
+**Outils clés :**
+- OpenVAS, Nmap, Responder, Wireshark, Enum4linux
 
-[^2]: https://www.intrinsec.com/pentest-guide-complet-de-test-dintrusion/
+---
 
-[^3]: https://www.piirates.fr/kali-linux-outil-pentest/
+### Pentest Externe ("Black Box" ou "Grey Box")
 
-[^4]: https://www.it-connect.fr/chapitres/phase-de-scan-de-vulnerabilites/
+**Caractéristiques :**
+- Accès depuis l'internet (simulation d'une attaque externe).
+- Objectif : Identifier les failles accessibles publiquement.
+- Contrainte : Aucun déni de service autorisé (pas de flooding, pas de crash).
 
-[^5]: https://www.reddit.com/r/tryhackme/comments/18vqyee/nessus_vs_openvas_vs_nmap/
+**Approche spécifique :**
+- Scan des IP publiques avec `Nmap` (prudent).
+- Énumération OSINT avec `whois`, `dig`, `theHarvester`.
+- Scan de vulnérabilités web avec `Nikto` ou `Burp Suite`.
+- Injection SQL avec `SQLmap` sur les formulaires web.
 
-[^6]: https://www.ambient-it.net/meilleurs-outils-piratage-ethiques/
+**Outils clés :**
+- Nmap, OpenVAS, Nikto, Burp Suite, SQLmap, theHarvester
 
-[^7]: https://www.piirates.fr/pentest-externe-retour-dexperience/
+---
 
-[^8]: https://si-cloud.fr/pentest-entreprise/
+## Checklist Avant de Démarrer
 
-[^9]: https://www.jedha.co/formation-cybersecurite/kali-linux-la-boite-a-outils-gratuite-pour-les-pentesters
+Avant tout penetest, valider :
 
-[^10]: https://blog.httpcs.com/pentest-interne-vs-pentest-externe/
+- [ ] **Scope** : Quelles adresses IP ou domaines peut-on tester ?
+- [ ] **Horaires** : À quel moment faire le test (heures creuses) ?
+- [ ] **Autorisation écrite** : Document signé autorisant les tests.
+- [ ] **Point de contact** : Qui appeler en cas de problème ?
+- [ ] **Limites** : Interdiction de déni de service ? De données sensibles ? Etc.
+- [ ] **Environnement de test** : Machine virtuelle ? Réseau isolé ?
 
-[^11]: https://www.vaadata.com/blog/fr/pentest-methodologie-deroulement-scope-et-types-de-tests-dintrusion/
+---
 
-[^12]: https://www.solutions-numeriques.com/kali-linux-2024-4-le-linux-des-experts-de-la-securite-est-a-jour/
+## Commandes Essentielles Rapides
 
-[^13]: https://www.qiminfo.ch/pentest/
+```bash
+# Reconnaissance
+whois exemple.com
+dig exemple.com
+theHarvester -d exemple.com -b google
 
-[^14]: https://www.youtube.com/watch?v=DUaCW2ea9Ng
+# Scan réseau
+nmap -sV -sC -O 192.168.1.0/24
+netdiscover -r 192.168.1.0/24
+Enum4linux 192.168.1.100
 
-[^15]: https://datascientest.com/kali-linux-tout-savoir
+# Scan de vulnérabilités
+nmap --script vuln 192.168.1.100
+nikto -h http://exemple.com
 
-[^16]: https://skillx.fr/pentest-interne-vs-pentest-externe-quelle-solution-choisir-pour-securiser-votre-entreprise/
+# Recherche d'exploits
+searchsploit apache 2.4.49
 
-[^17]: https://labex.io/fr/tutorials/nmap-how-to-scan-for-critical-cve-weaknesses-418907
+# Brute force SSH
+hydra -l admin -P wordlist.txt ssh://192.168.1.1
 
-[^18]: https://www.bouyguestelecom-pro.fr/mag-business/pentest/
+# Écoute réseau (AD)
+responder -I eth0
 
-[^19]: https://www.oto-cyberdefense.fr/fr/blog/cybersecurite/test-intrusion
+# Metasploit
+msfconsole
+search apache
+use exploit/...
+set RHOST 192.168.1.100
+run
+```
 
-[^20]: https://www.consultingit.fr/en/metasploit-tutorial-francais-hacking-ethique-2-sur-3/2-non-categorise/638-openvas-9-audit-de-vulnerabilites
+---
 
+## Ressources et Références
+
+- **PTES (Penetration Testing Execution Standard)** : Standard méthodologique international.
+- **OWASP** : Pour les tests de sécurité web.
+- **CVE Database** : https://cve.mitre.org/ (identifiants des vulnérabilités connues).
+- **Exploit-DB** : Base de données des exploits publics (accédée via Searchsploit).
+- **HackTheBox** / **TryHackMe** : Environnements d'entraînement légaux.
+
+---
+
+## Notes Importantes
+
+1. **Légalité** : Tester uniquement sur les systèmes où vous avez une autorisation écrite.
+2. **Éthique** : Le penetesting est un outil défensif ; ne pas l'utiliser à mauvais escient.
+3. **Confidentialité** : Les résultats et les données capturées doivent rester confidentiels.
+4. **Documentation** : Tout doit être documenté pour justifier les actions entreprises.
+5. **Non-destruction** : L'objectif est de trouver les failles, pas de casser l'infrastructure.
